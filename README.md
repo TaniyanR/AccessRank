@@ -4,6 +4,8 @@ AccessRank は **PHP 8.2+ / SQLite** で動作する軽量な「逆アクセス�
 外部流入（リファラ）を集計してランキング表示し、あわせて **今日／昨日／総PV** と **直近2週間の棒グラフ** をサイトに埋め込めます。
 ウィジェットの幅は **250〜500px** で変更可能です。
 
+**GitHub Description（日本語）**: 逆アクセス（IN）ランキング＋アクセスカウンター（今日/昨日/総PV・14日棒グラフ）を提供する軽量PHPツール。
+
 ---
 
 ## 主な機能
@@ -12,7 +14,7 @@ AccessRank は **PHP 8.2+ / SQLite** で動作する軽量な「逆アクセス�
 * アクセスカウンター（今日／昨日／総PV）
 * 直近14日棒グラフ付きカウンターウィジェット
 * 幅指定 `w=250〜500`（範囲外は自動補正）
-* 速度対策：カウントと表示を分離でき、表示側は短期キャッシュ可能
+* 速度対策：カウントと表示を分離でき、表示側は短期キャッシュ
 * セキュリティ：入力検証、プリペアドステートメント、安全な出力エスケープ
 
 ---
@@ -25,16 +27,17 @@ AccessRank は **PHP 8.2+ / SQLite** で動作する軽量な「逆アクセス�
 
 ---
 
-## ディレクトリ構成（想定）
+## ディレクトリ構成
 
 ```
 accessrank/
   access.php                # 逆アクセス（IN）計測
-  rank.html                 # ランキング出力（生成/更新される）
+  rank.html                 # ランキング出力（自動生成/更新）
   counter_ping.php          # カウント専用（軽い）
   counter_widget.php        # 表示専用（棒グラフ+今日/昨日/総合）
+  config.php                # 設定
+  lib.php                   # 共通処理
   data/                     # SQLite DB / キャッシュ等（書込み必要）
-  admin/                    # 管理（ある場合）
 ```
 
 ---
@@ -44,7 +47,8 @@ accessrank/
 1. `accessrank/` をサイトに配置
    例：`https://example.com/accessrank/`
 2. `accessrank/data/` に書き込み権限を付与（SQLite DB/キャッシュ用）
-3. 設置したいページにスニペットを貼り付け
+3. `accessrank/config.php` の内部ホスト設定を必要に応じて変更
+4. 設置したいページにスニペットを貼り付け
 
 ---
 
@@ -66,6 +70,7 @@ AccessRank は **「カウント」** と **「表示」** を分けるのが最
 ```
 
 * `w`：250〜500（範囲外は自動補正）
+* `id`：描画先のDOM id（英数/`_`/`-`）
 * `count=0`：表示のみ（ここではカウントしない）
 * `async`：ページ描画を邪魔しにくくします
 
@@ -97,8 +102,17 @@ document.write('<script src="/accessrank/access.php?referrer=' + encodeURICompon
 ### `counter_widget.php`
 
 * `w`：幅（250〜500）
-* `id`：描画先のDOM id（英数/`_`/`-`推奨）
+* `id`：描画先のDOM id（英数/`_`/`-`）
 * `count`：`0`=表示のみ / `1`=表示時も加算（非推奨）
+
+---
+
+## 設定（config.php）
+
+* `AR_EXCLUDE_INTERNAL`: 自サイトのリファラを除外するか
+* `AR_INTERNAL_HOSTS`: 自サイトのホスト名（例：`example.com`）
+* `AR_WIDGET_CACHE_TTL`: ウィジェット表示のキャッシュ秒数（既定30秒）
+* `AR_RANK_CACHE_TTL`: ランキングHTMLの再生成間隔（既定60秒）
 
 ---
 
@@ -107,7 +121,7 @@ document.write('<script src="/accessrank/access.php?referrer=' + encodeURICompon
 遅くなる原因は「ファイル数」よりも、**毎回集計を走らせること**や **SQLiteのロック待ち**です。
 推奨構成（カウント分離 + 表示短期キャッシュ）で改善します。
 
-SQLiteの標準最適化（推奨）：
+SQLiteの最適化（接続直後に設定済み）：
 
 * `journal_mode=WAL`
 * `synchronous=NORMAL`
@@ -139,13 +153,15 @@ SQLiteの標準最適化（推奨）：
 
 ---
 
-## Roadmap
+## 更新履歴
 
-* URL正規化（http/https/www/クエリ）強化
-* “直打ち/ブックマーク” の扱いを設定化（referrer空の扱い）
-* 管理機能（リセット、除外、期間切替、表示件数）
-* さらなる負荷対策（キャッシュ改善、集計クエリ最適化）
-
+* 変更点は [CHANGELOG.md](CHANGELOG.md) を参照してください。
 
 ---
-TBD（例：MIT / GPLv2 など、GitHub公開方針に合わせて決めてください）
+
+## 運用メモ（Issuesタイトル案）
+
+1. ウィジェットのキャッシュTTL見直し
+2. 逆アクセスの除外ホスト設定追加
+3. 管理機能（リセット/除外/期間切替）
+4. リファラ正規化の強化
