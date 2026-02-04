@@ -45,21 +45,6 @@ try {
     $pdo = ar_get_pdo();
     $today = (new DateTimeImmutable('today'))->format('Y-m-d');
     ar_increment_inbound($pdo, $today, $host);
-
-    $rankPath = __DIR__ . '/rank.html';
-    if (ar_rank_needs_refresh($rankPath)) {
-        $lockPath = $rankPath . '.lock';
-        $lockHandle = fopen($lockPath, 'c');
-        if ($lockHandle !== false) {
-            if (flock($lockHandle, LOCK_EX | LOCK_NB)) {
-                if (ar_rank_needs_refresh($rankPath)) {
-                    ar_generate_rank_html($pdo, $rankPath);
-                }
-                flock($lockHandle, LOCK_UN);
-            }
-            fclose($lockHandle);
-        }
-    }
 } catch (Throwable $e) {
     ar_log_exception($e);
 }

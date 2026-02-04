@@ -1,3 +1,40 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/lib.php';
+
+header('Content-Type: text/html; charset=utf-8');
+header('Cache-Control: no-store');
+header('X-Content-Type-Options: nosniff');
+
+$rankPath = ar_get_rank_cache_path();
+
+try {
+    $pdo = ar_get_pdo();
+
+    if (ar_rank_needs_refresh($rankPath)) {
+        $lockPath = $rankPath . '.lock';
+        $lockHandle = fopen($lockPath, 'c');
+        if ($lockHandle !== false) {
+            if (flock($lockHandle, LOCK_EX | LOCK_NB)) {
+                if (ar_rank_needs_refresh($rankPath)) {
+                    ar_generate_rank_html($pdo, $rankPath);
+                }
+                flock($lockHandle, LOCK_UN);
+            }
+            fclose($lockHandle);
+        }
+    }
+
+    if (is_file($rankPath)) {
+        echo file_get_contents($rankPath);
+        return;
+    }
+} catch (Throwable $e) {
+    ar_log_exception($e);
+}
+
+?>
 <!doctype html>
 <html lang="ja">
 <head>

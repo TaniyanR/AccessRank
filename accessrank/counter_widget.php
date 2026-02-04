@@ -19,7 +19,7 @@ if ($id !== '' && !preg_match('/^[A-Za-z0-9_-]{1,64}$/', $id)) {
 }
 
 $countFlag = filter_input(INPUT_GET, 'count', FILTER_VALIDATE_INT);
-$doCount = $countFlag === null ? true : ($countFlag === 1);
+$doCount = $countFlag === null ? false : ($countFlag === 1);
 
 $stats = [
     'today' => 0,

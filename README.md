@@ -35,6 +35,7 @@ accessrank/
   rank.html                 # ランキング出力（自動生成/更新）
   counter_ping.php          # カウント専用（軽い）
   counter_widget.php        # 表示専用（棒グラフ+今日/昨日/総合）
+  admin/                    # 管理画面（ログイン/パスワード変更）
   config.php                # 設定
   lib.php                   # 共通処理
   data/                     # SQLite DB / キャッシュ等（書込み必要）
@@ -95,6 +96,16 @@ document.write('<script src="/accessrank/access.php?referrer=' + encodeURICompon
 <iframe src="/accessrank/rank.html" style="width:100%;height:600px;border:0;"></iframe>
 ```
 
+`rank.html` はアクセス時に一定間隔（既定60秒）を超えていれば自動再生成されます。
+
+---
+
+## 管理画面（/accessrank/admin/）
+
+* URL: `/accessrank/admin/`
+* 初期ログイン: `admin` / `pass`
+* 初回ログイン後はパスワード変更が完了するまで強制的に変更画面へ移動します。
+
 ---
 
 ## パラメータ
@@ -103,7 +114,7 @@ document.write('<script src="/accessrank/access.php?referrer=' + encodeURICompon
 
 * `w`：幅（250〜500）
 * `id`：描画先のDOM id（英数/`_`/`-`）
-* `count`：`0`=表示のみ / `1`=表示時も加算（非推奨）
+* `count`：`0`=表示のみ / `1`=表示時も加算（非推奨、省略時は0）
 
 ---
 
@@ -138,6 +149,14 @@ SQLiteの最適化（接続直後に設定済み）：
 * レート制限（IP+UAの短時間連打抑制）と簡易bot除外
 
 ---
+
+## パーミッション（推奨）
+
+* dir: 755（書込み必要なら775、最終手段777）
+* file: 644（書込み必要なら664、最終手段666）
+* accessrank/data/: 775（最終手段777）
+* accessrank/data/accessrank.sqlite: 664（最終手段666）
+* accessrank/rank.html（生成する場合）: 664（最終手段666）
 
 ## よくあるトラブル
 
