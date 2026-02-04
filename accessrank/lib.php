@@ -43,9 +43,17 @@ function ar_init_schema(PDO $pdo): void
     $pdo->exec('CREATE TABLE IF NOT EXISTS pv_rate_limit (key TEXT PRIMARY KEY, last_ts INTEGER NOT NULL)');
     $pdo->exec('CREATE TABLE IF NOT EXISTS in_daily (date TEXT NOT NULL, host TEXT NOT NULL, count INTEGER NOT NULL, PRIMARY KEY(date, host))');
     $pdo->exec('CREATE TABLE IF NOT EXISTS in_total (host TEXT PRIMARY KEY, count INTEGER NOT NULL)');
+    $pdo->exec('CREATE TABLE IF NOT EXISTS admin_users (username TEXT PRIMARY KEY, password_hash TEXT NOT NULL, must_change INTEGER NOT NULL)');
 
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_in_total_count ON in_total (count DESC)');
     $pdo->exec('CREATE INDEX IF NOT EXISTS idx_in_daily_date ON in_daily (date)');
+
+    $stmt = $pdo->prepare('INSERT INTO admin_users(username, password_hash, must_change) VALUES(:username, :hash, 1)
+        ON CONFLICT(username) DO NOTHING');
+    $stmt->execute([
+        ':username' => 'admin',
+        ':hash' => password_hash('pass', PASSWORD_DEFAULT),
+    ]);
 }
 
 function ar_get_remote_ip(): string
@@ -99,6 +107,11 @@ function ar_increment_inbound(PDO $pdo, string $date, string $host): void
 function ar_get_widget_cache_path(): string
 {
     return __DIR__ . '/data/widget_cache.json';
+}
+
+function ar_get_rank_cache_path(): string
+{
+    return __DIR__ . '/data/rank_cache.html';
 }
 
 function ar_get_widget_stats(PDO $pdo): array
@@ -226,4 +239,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;backgr
     $tmpPath = $rankPath . '.tmp';
     file_put_contents($tmpPath, $html, LOCK_EX);
     rename($tmpPath, $rankPath);
+}
+
+function ar_fetch_admin_user(PDO $pdo, string $username): ?array
+{
+    $stmt = $pdo->prepare('SELECT username, password_hash, must_change FROM admin_users WHERE username = :username');
+    $stmt->execute([':username' => $username]);
+    $row = $stmt->fetch();
+    if (!is_array($row)) {
+        return null;
+    }
+
+    return $row;
+}
+
+function ar_update_admin_password(PDO $pdo, string $username, string $passwordHash): void
+{
+    $stmt = $pdo->prepare('UPDATE admin_users SET password_hash = :hash, must_change = 0 WHERE username = :username');
+    $stmt->execute([
+        ':hash' => $passwordHash,
+        ':username' => $username,
+    ]);
 }
