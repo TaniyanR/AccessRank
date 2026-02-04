@@ -111,7 +111,7 @@ function ar_get_widget_cache_path(): string
 
 function ar_get_rank_cache_path(): string
 {
-    return __DIR__ . '/data/rank_cache.html';
+    return __DIR__ . '/rank.html';
 }
 
 function ar_get_widget_stats(PDO $pdo): array
